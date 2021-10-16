@@ -30,7 +30,7 @@ type Auth {
 # For reading data
 
 type Query {
-    users: [Users]
+    user: [User]
     me: User
 }
 
