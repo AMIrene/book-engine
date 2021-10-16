@@ -39,16 +39,16 @@ type Query {
 type Mutation {
 
     # add user mutation
-    addUser(username: String!, email: String!, password: string!): Auth
+    addUser(username: String!, email: String!, password: String!): Auth
 
     # login mutation
     login(email: String!, password: String!): Auth
 
     # Save a Book: Accepts a book author's array, description, title, bookId, image, and link as parameters; returns a User type
-    saveBook(authors: [String], description: String, title: String, bookID: String, image: String, link: String) : User
+    saveBook(authors: [String], description: String, title: String, bookId: String, image: String, link: String) : User
 
     # Remove a Book: Accepts a book's bookId as a parameter; returns a User type.
-    removeBook(bookID: String) : User
+    removeBook(bookId: String) : User
 }
 
 ` ;

@@ -4,64 +4,85 @@ const { signToken } = require('../utils/auth');
 
 const resolvers = {
 
-//query where me returns a user 
+    //query where me returns a user 
 
     Query: {
-      uers: async () => {
-        return User.find();
-      },
-  
-      user: async (parent, { userId }) => {
-        return User.findOne({ _id: userId });
-      },
-      // By adding context to our query, we can retrieve the logged in user without specifically searching for them
-      me: async (parent, args, context) => {
-        if (context.user) {
-          return User.findOne({ _id: context.user._id });
-        }
-        throw new AuthenticationError('You need to be logged in!');
-      },
+       
+        // By adding context to our query, we can retrieve the logged in user without specifically searching for them
+        me: async (parent, args, context) => {
+            if (context.user) {
+                const userDetails = await User.findOne({ _id: context.user._id })
+                    .select('-_v -password')
+                return userDetails;
+            }
+            throw new AuthenticationError('You need to be logged in!');
+
+        },
     },
 
-//mutations
+    //mutations
     Mutation: {
         
-//mutation functionality for sign up/adding user
-addUser: async (parent, { username, email, password }) => {
-    const user = await User.create({ username, email, password });
-    const token = signToken(user);
+        //mutation functionality for sign up/adding user
+        addUser: async (parent, { username, email, password }) => {
+            const user = await User.create({ username, email, password });
+            const token = signToken(user);
 
-    return { token, user };
-    },
+            return { token, user };
+        },
         
-//mutation functionality for login      
-login: async (parent, { email, password }) => {
-    const user = await User.findOne({ email });
+        //mutation functionality for login      
+        login: async (parent, { email, password }) => {
+            const user = await User.findOne({ email });
 
-    if (!user) {
-      throw new AuthenticationError('No user with this email found!');
-    }
+            if (!user) {
+                throw new AuthenticationError('No user with this email found!');
+            }
 
-    const correctPw = await user.isCorrectPassword(password);
+            const correctPw = await user.isCorrectPassword(password);
 
-    if (!correctPw) {
-      throw new AuthenticationError('Incorrect password!');
-    }
+            if (!correctPw) {
+                throw new AuthenticationError('Incorrect password!');
+            }
 
-    const token = signToken(user);
-    return { token, user };
-  },
+            const token = signToken(user);
+            return { token, user };
+        },
 
 
-//mutation functionality for saving a book
+        //mutation functionality for saving a book
+        // Add a third argument to the resolver to access data in our context
 
-        saveBook: async (parent, { authors, description, bookID, image, link }) => {
-            return User.findOneAndUpdate(
-                { _id: userID },
-                {
-                    $addToSet
-                }
-    )
-}
+        saveBook: async (parent, { authors, description, bookId, image, link }, context) => {
+            if (context.user) {
+                const updatedUser = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $push: { savedBooks: authors, description, bookId, image, link } },
+                    { new: true, runValidators: true }
+                    
+                );
+                return updatedUser;
+            }
 
-// mutation functionality for removing a book
+            throw new Error('Your book could not be saved!')
+        },
+      
+        // mutation functionality for removing a book
+        // Add a third argument to the resolver to access data in our context
+        removeBook: async (parent, { bookId }, context) => {
+            if (context.user) {
+                const updatedUser = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId } } },
+                    { new: true }
+                );
+                return updatedUser;
+            }
+
+                throw new Error('Your book could not be removed!')
+            }
+        }
+    };
+            
+    
+            module.exports = resolvers;
