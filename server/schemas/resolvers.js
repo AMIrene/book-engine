@@ -24,16 +24,44 @@ const resolvers = {
     },
 
 //mutations
+    Mutation: {
+        
+//mutation functionality for sign up/adding user
+addUser: async (parent, { username, email, password }) => {
+    const user = await User.create({ username, email, password });
+    const token = signToken(user);
 
+    return { token, user };
+    },
+        
+//mutation functionality for login      
+login: async (parent, { email, password }) => {
+    const user = await User.findOne({ email });
 
-//mutation functionality for login
+    if (!user) {
+      throw new AuthenticationError('No user with this email found!');
+    }
 
+    const correctPw = await user.isCorrectPassword(password);
 
-//mutation functionality for adding user
+    if (!correctPw) {
+      throw new AuthenticationError('Incorrect password!');
+    }
 
+    const token = signToken(user);
+    return { token, user };
+  },
 
 
 //mutation functionality for saving a book
 
+        saveBook: async (parent, { authors, description, bookID, image, link }) => {
+            return User.findOneAndUpdate(
+                { _id: userID },
+                {
+                    $addToSet
+                }
+    )
+}
 
 // mutation functionality for removing a book
